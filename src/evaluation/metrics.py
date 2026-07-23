@@ -40,7 +40,7 @@ def compute_ssim(
     """Compute 3D SSIM by averaging over axial slices (fast approximation).
 
     Args:
-        pred: Predicted PET array (D, H, W).
+        pred: Predicted PET array (D, H, W) or (B, C, D, H, W).
         target: Ground truth PET array (D, H, W).
         mask: Optional brain mask.
         data_range: Data range for SSIM. Auto-computed if None.
@@ -48,6 +48,12 @@ def compute_ssim(
     Returns:
         Mean SSIM value.
     """
+    pred = np.squeeze(pred)
+    target = np.squeeze(target)
+
+    if pred.ndim != 3 or target.ndim != 3:
+        raise ValueError(f"Expected 3D volumes after squeeze, got pred shape {pred.shape}, target shape {target.shape}")
+
     if data_range is None:
         data_range = float(max(target.max() - target.min(), 1e-8))
 
