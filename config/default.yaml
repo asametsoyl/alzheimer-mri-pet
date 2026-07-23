@@ -1,0 +1,144 @@
+# =============================================================
+# MRI → PET Synthesis Pipeline — Default Configuration
+# Override per experiment in config/experiments/<name>.yaml
+# All fields are validated at startup via src/config.py
+# =============================================================
+
+# ─── Environment ──────────────────────────────────────────────
+environment:
+  colab_drive_root: "/content/drive/MyDrive/Google Colabs"
+  data_root: "/content/drive/MyDrive/Google Colabs/data"
+  cache_root: "/content/cache"
+  output_root: "/content/drive/MyDrive/Google Colabs/outputs"
+  min_disk_gb: 10  # warn if local disk free < this value
+
+# ─── Data ─────────────────────────────────────────────────────
+data:
+  dataset: "ADNI"          # ADNI | AIBL | OASIS | custom
+  mri_modality: "T1w"
+  pet_tracer: "auto"       # auto | FDG | Florbetapir | Florbetaben | Flortaucipir
+  split_seed: 42
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15         # must sum to 1.0
+  exclusions_file: "data/exclusions.csv"
+
+# ─── Preprocessing ────────────────────────────────────────────
+preprocessing:
+  mri:
+    target_spacing_mm: [1.0, 1.0, 1.0]
+    skull_strip_tool: "hd-bet"    # hd-bet | synthstrip | none
+    bias_correction: true          # N4ITK
+    mni_registration: false        # register to MNI152 atlas
+    normalization: "z-score"       # z-score | percentile | whitestripe
+    percentile_clip: [0.5, 99.5]   # used only if normalization=percentile
+    target_shape: [128, 128, 128]  # crop/pad to this shape (voxels)
+  pet:
+    coregister_to_mri: true
+    # Tracer-specific thresholds (used for reporting only, not clipping)
+    amyloid_suvr_threshold:
+      Florbetapir: 1.11
+      Florbetaben: 1.08
+    reference_region:
+      FDG: "whole_cerebellum"
+      Florbetapir: "cerebellar_gray"
+      Florbetaben: "cerebellar_gray"
+      Flortaucipir: "inferior_cerebellar_gray"
+
+# ─── Patch ────────────────────────────────────────────────────
+patch:
+  size: [96, 96, 96]
+  stride_train: [48, 48, 48]
+  stride_inference: [64, 64, 64]
+  sampling_strategy: "weighted_random"   # weighted_random | uniform | foreground_weighted
+  foreground_threshold: 0.05
+  min_brain_fraction: 0.10
+
+# ─── Augmentation ─────────────────────────────────────────────
+augmentation:
+  enabled: true   # applied to training set only
+  flip_lr_prob: 0.5
+  affine_prob: 0.3
+  affine_degrees: 10        # rotation range ± degrees
+  affine_scale: [0.9, 1.1]
+  intensity_shift_prob: 0.2
+  intensity_shift_fraction: 0.05
+  gaussian_noise_prob: 0.2
+  gaussian_noise_std: 0.01
+  bias_field_prob: 0.10
+  elastic_prob: 0.10
+
+# ─── Model ────────────────────────────────────────────────────
+model:
+  name: "res_attn_unet"    # res_attn_unet | attn_unet | unetr | swin_unetr | mednext
+  in_channels: 1
+  out_channels: 1
+  features: [32, 64, 128, 256, 512]
+  dropout: 0.1
+  deep_supervision: false
+
+# ─── Loss ─────────────────────────────────────────────────────
+loss:
+  l1_weight: 1.0
+  ssim_weight: 0.5
+  perceptual_weight: 0.0
+  adversarial_weight: 0.0
+  gradient_weight: 0.0
+
+# ─── Training ─────────────────────────────────────────────────
+training:
+  optimizer: "adamw"           # adamw | adam | sgd
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-5
+  lr_scheduler: "cosine_annealing_warm_restarts"
+  lr_T0: 10
+  lr_eta_min: 1.0e-6
+  max_epochs: 200
+  early_stopping_patience: 30
+  early_stopping_metric: "val_ssim"    # maximize
+  gradient_clip_norm: 1.0
+  batch_size: 2
+  gradient_accumulation_steps: 4       # effective batch = 8
+  num_workers: 2
+  pin_memory: true
+  save_every_n_epochs: 10
+  save_best_metric: "val_ssim"         # val_loss | val_ssim | val_psnr
+  amp_enabled: true
+
+# ─── Inference ────────────────────────────────────────────────
+inference:
+  overlap: 0.5
+  blend_mode: "gaussian"    # gaussian | constant
+  tta_enabled: false
+  tta_flips: ["lr"]         # lr = left-right flip
+  save_difference_map: true
+  save_subject_metrics: true
+
+# ─── Evaluation ───────────────────────────────────────────────
+evaluation:
+  compute_on_brain_mask: true
+  metrics: ["ssim", "psnr", "mae", "mse", "nmse", "pcc"]
+  clinical_metrics: true     # SUVr, Bland-Altman, ROI analysis
+  roi_labels:
+    - "frontal"
+    - "temporal"
+    - "parietal"
+    - "cingulate"
+    - "precuneus"
+    - "striatum"
+  statistical_test: "wilcoxon"         # wilcoxon | ttest
+  multiple_comparison_correction: "bonferroni"
+
+# ─── Tracking ─────────────────────────────────────────────────
+tracking:
+  wandb_enabled: false       # set to true if WANDB_API_KEY is set in env
+  wandb_project: "mri-pet-synthesis"
+  log_every_n_steps: 10
+  metrics_file: "metrics.jsonl"
+  experiments_index: "experiments.csv"
+
+# ─── Reproducibility ──────────────────────────────────────────
+reproducibility:
+  random_seed: 42
+  deterministic: true
+  cudnn_benchmark: false

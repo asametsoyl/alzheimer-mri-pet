@@ -1,0 +1,46 @@
+# ─────────────────────────────────────────────────────────────
+# MRI → PET Synthesis Pipeline — Pinned Requirements
+# Python >= 3.10
+# ─────────────────────────────────────────────────────────────
+
+# Deep learning
+torch==2.1.0
+torchvision==0.16.0
+
+# Medical imaging
+monai==1.3.0
+torchio==0.19.6
+nibabel==5.1.0
+SimpleITK==2.3.1
+
+# Numerical / scientific
+numpy==1.26.4
+scipy==1.12.0
+scikit-learn==1.4.0
+scikit-image==0.22.0
+
+# Data handling
+pandas==2.2.0
+openpyxl==3.1.2
+
+# Visualization
+matplotlib==3.8.3
+seaborn==0.13.2
+
+# Config
+pyyaml==6.0.1
+pydantic==2.6.1
+
+# Experiment tracking (optional — gracefully skipped if not configured)
+wandb==0.16.3
+
+# Linting / quality
+ruff==0.3.0
+
+# Testing
+pytest==8.1.0
+pytest-cov==5.0.0
+
+# Utilities
+tqdm==4.66.2
+rich==13.7.0

@@ -1,0 +1,67 @@
+# ── Data (never commit raw or processed medical imaging data) ─────────────
+data/
+/content/
+*.nii
+*.nii.gz
+*.mgh
+*.mgz
+*.dcm
+*.img
+*.hdr
+
+# ── Model checkpoints & cache ──────────────────────────────────────────────
+checkpoints/
+cache/
+runs/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# ── Experiment outputs ─────────────────────────────────────────────────────
+outputs/
+inference/
+visualizations/
+experiments.csv
+*_metrics.json
+*_report.txt
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.installed.cfg
+
+# ── Virtual environments ───────────────────────────────────────────────────
+.venv/
+venv/
+env/
+.env
+
+# ── Jupyter ────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+# Un-comment the line below to also ignore notebook outputs (recommended):
+# *.ipynb
+
+# ── IDE & OS ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── Logs ───────────────────────────────────────────────────────────────────
+*.log
+logs/
+wandb/
+
+# ── Secrets / API keys (never commit these) ───────────────────────────────
+.env
+*.env
+secrets.yaml
